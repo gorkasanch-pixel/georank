@@ -185,6 +185,7 @@ export default function MerchantApp() {
   const [gsc, setGsc]           = useState(false)
   const [showUpgrade, setUpgrade] = useState(false)
   const [activeSchema, setSchema] = useState(null)
+  const [openFaq, setOpenFaq]       = useState(null)
   const [keywords, setKeywords] = useState(SAMPLE_KEYWORDS)
   const [addingKw, setAddingKw] = useState(false)
   const [newKw, setNewKw]       = useState('')
@@ -535,8 +536,6 @@ export default function MerchantApp() {
         { icon:'📈', title:'Improve Your GEO Score', steps:['Fix missing FAQ Schema (biggest impact)','Sync NAP data across all directories','Connect Google Search Console','Generate AI snippets for top 10 customer questions','Verify your Google Business Profile is active'] },
         { icon:'🤖', title:'Get Cited by AI Engines', steps:['Create a FAQ page on your website','Add FAQ schema markup to that page','Generate AI snippets and publish them','Ensure your GBP has recent posts','Check citations weekly in AI Citations tab'] },
       ]
-
-      const [openFaq, setOpenFaq] = useState(null)
 
       return (
         <div>
