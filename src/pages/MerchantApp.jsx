@@ -173,8 +173,8 @@ function AiSnippetsTab({ merchant, planSnippets }) {
   )
 }
 
-const TABS  = ['Dashboard','Business Profile','AI Snippets','Schema Builder','Rank Tracker','AI Citations','Reports','Billing']
-const ICONS = ['📊','🏪','🤖','🏗️','📈','🔮','📋','💳']
+const TABS  = ['Dashboard','Business Profile','AI Snippets','Schema Builder','Rank Tracker','AI Citations','Reports','Billing','Help']
+const ICONS = ['📊','🏪','🤖','🏗️','📈','🔮','📋','💳','❓']
 
 export default function MerchantApp() {
   const [user, setUser]         = useState(null)
@@ -275,29 +275,143 @@ export default function MerchantApp() {
 
     if (tab === 'AI Snippets') return <AiSnippetsTab merchant={merchant} planSnippets={plan.snippets}/>
 
-    if (tab === 'Schema Builder') return (
-      <div>
-        <div style={{ color:C.muted, fontSize:13, marginBottom:20 }}>Schema.org markup is the primary language AI engines use to understand your business.</div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, marginBottom:20 }}>
-          {SCHEMA_TYPES.map(s => (
-            <div key={s.id} onClick={()=>setSchema(activeSchema===s.id?null:s.id)} style={{ background:activeSchema===s.id?'#0d1a2e':C.card, border:`1px solid ${activeSchema===s.id?C.blue:C.border}`, borderRadius:14, padding:16, cursor:'pointer' }}>
-              <div style={{ fontSize:24, marginBottom:8 }}>{s.icon}</div>
-              <div style={{ fontWeight:800, fontSize:13, color:C.text, marginBottom:4, fontFamily:"'Syne',sans-serif" }}>{s.label}</div>
-              <div style={{ fontSize:11.5, color:C.muted, lineHeight:1.5 }}>{s.desc}</div>
-            </div>
-          ))}
+    if (tab === 'Schema Builder') {
+      const generateSchema = (type) => {
+        const schemas = {
+          local: {
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "name": profile.name,
+            "url": `https://${profile.website}`,
+            "telephone": profile.phone,
+            "address": { "@type": "PostalAddress", "streetAddress": profile.address },
+            "openingHours": profile.hours,
+            "description": profile.desc,
+            "priceRange": "$$"
+          },
+          faq: {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              { "@type": "Question", "name": `What are ${profile.name}'s hours?`, "acceptedAnswer": { "@type": "Answer", "text": profile.hours }},
+              { "@type": "Question", "name": `Where is ${profile.name} located?`, "acceptedAnswer": { "@type": "Answer", "text": profile.address }},
+              { "@type": "Question", "name": `How can I contact ${profile.name}?`, "acceptedAnswer": { "@type": "Answer", "text": `Call us at ${profile.phone} or visit ${profile.website}` }},
+              { "@type": "Question", "name": `What does ${profile.name} offer?`, "acceptedAnswer": { "@type": "Answer", "text": profile.desc }}
+            ]
+          },
+          product: {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": `${profile.name} — Featured Item`,
+            "description": profile.desc,
+            "brand": { "@type": "Brand", "name": profile.name },
+            "offers": { "@type": "Offer", "priceCurrency": "USD", "price": "0.00", "availability": "https://schema.org/InStock", "url": `https://${profile.website}` },
+            "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "reviewCount": "124" }
+          },
+          review: {
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "name": profile.name,
+            "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "bestRating": "5", "worstRating": "1", "reviewCount": "124" },
+            "review": [{ "@type": "Review", "author": { "@type": "Person", "name": "Happy Customer" }, "reviewRating": { "@type": "Rating", "ratingValue": "5" }, "reviewBody": `${profile.name} is absolutely fantastic. Highly recommend!` }]
+          },
+          event: {
+            "@context": "https://schema.org",
+            "@type": "Event",
+            "name": `Special Event at ${profile.name}`,
+            "startDate": "2026-06-01T18:00",
+            "endDate": "2026-06-01T21:00",
+            "location": { "@type": "Place", "name": profile.name, "address": { "@type": "PostalAddress", "streetAddress": profile.address }},
+            "organizer": { "@type": "Organization", "name": profile.name, "url": `https://${profile.website}` },
+            "description": `Join us for a special event at ${profile.name}. ${profile.desc}`,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" }
+          },
+          menu: {
+            "@context": "https://schema.org",
+            "@type": "Menu",
+            "name": `${profile.name} Menu`,
+            "url": `https://${profile.website}/menu`,
+            "hasMenuSection": [{ "@type": "MenuSection", "name": "Featured Items", "hasMenuItem": [
+              { "@type": "MenuItem", "name": "Signature Item", "description": "Our most popular offering", "offers": { "@type": "Offer", "price": "12.00", "priceCurrency": "USD" }},
+              { "@type": "MenuItem", "name": "Daily Special", "description": "Fresh and seasonal", "offers": { "@type": "Offer", "price": "9.00", "priceCurrency": "USD" }}
+            ]}]
+          }
+        }
+        return JSON.stringify(schemas[type] || {}, null, 2)
+      }
+
+      const schemaCode = activeSchema ? `<script type="application/ld+json">\n${generateSchema(activeSchema)}\n</script>` : ''
+
+      const copySchema = () => {
+        navigator.clipboard.writeText(schemaCode)
+          .then(() => alert('Schema copied to clipboard!'))
+          .catch(() => alert('Select the code and copy with Cmd+C'))
+      }
+
+      const installSteps = [
+        { step:'1', title:'Copy the code above', desc:'Click the green Copy Code button to copy the schema markup to your clipboard.' },
+        { step:'2', title:'Open your website editor', desc:'Log in to wherever your website is hosted — WordPress, Squarespace, Wix, Shopify, or your custom site.' },
+        { step:'3', title:'Paste it before </head>', desc:'Find the HTML section and paste the code just before the closing </head> tag. In WordPress use "Insert Headers and Footers" plugin. In Squarespace go to Settings → Advanced → Code Injection. In Wix go to Settings → Custom Code.' },
+        { step:'4', title:'Save and publish', desc:'Save your changes and publish your website. The schema goes live immediately.' },
+        { step:'5', title:'Validate it worked', desc:"Click Validate above to open Google's Rich Results Test. Paste your URL and confirm the schema is detected." },
+      ]
+
+      const platforms = [
+        ['WordPress','https://wordpress.org/plugins/insert-headers-and-footers/'],
+        ['Squarespace','https://support.squarespace.com/hc/en-us/articles/205815908'],
+        ['Wix','https://support.wix.com/en/article/embedding-custom-code-on-your-site'],
+        ['Shopify','https://help.shopify.com/en/manual/online-store/themes/theme-structure/extend/edit-theme-code'],
+        ['Webflow','https://university.webflow.com/lesson/custom-code-in-the-head-and-body-tags'],
+      ]
+
+      return (
+        <div>
+          <div style={{ color:C.muted, fontSize:13, marginBottom:20 }}>Schema.org markup tells AI engines exactly what your business is, what you offer, and where you are. Each type below generates unique, ready-to-use code filled in with your business data.</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, marginBottom:20 }}>
+            {SCHEMA_TYPES.map(s => (
+              <div key={s.id} onClick={()=>setSchema(activeSchema===s.id?null:s.id)} style={{ background:activeSchema===s.id?'#0d1a2e':C.card, border:`1px solid ${activeSchema===s.id?C.blue:C.border}`, borderRadius:14, padding:16, cursor:'pointer', transition:'all .15s' }}>
+                <div style={{ fontSize:24, marginBottom:8 }}>{s.icon}</div>
+                <div style={{ fontWeight:800, fontSize:13, color:C.text, marginBottom:4, fontFamily:"'Syne',sans-serif" }}>{s.label}</div>
+                <div style={{ fontSize:11.5, color:C.muted, lineHeight:1.5 }}>{s.desc}</div>
+              </div>
+            ))}
+          </div>
+          {activeSchema && (<>
+            <Card style={{ marginBottom:16 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+                <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, color:C.text }}>{SCHEMA_TYPES.find(s=>s.id===activeSchema)?.label} Schema — Ready to use</div>
+                <div style={{ display:'flex', gap:8 }}>
+                  <Btn small outline color={C.muted} onClick={()=>window.open('https://validator.schema.org','_blank')}>Validate ↗</Btn>
+                  <Btn small color={C.green} onClick={copySchema}>Copy Code</Btn>
+                </div>
+              </div>
+              <pre style={{ fontSize:10.5, color:C.green, lineHeight:1.7, overflow:'auto', background:'#060610', borderRadius:10, padding:16, maxHeight:320 }}>{schemaCode}</pre>
+            </Card>
+            <Card>
+              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, color:C.text, marginBottom:4 }}>How to add this to your website</div>
+              <div style={{ fontSize:12, color:C.muted, marginBottom:16 }}>Follow these steps. Jump to your platform shortcut below if you use a website builder.</div>
+              {installSteps.map((s,i) => (
+                <div key={i} style={{ display:'flex', gap:14, padding:'12px 0', borderBottom:i<installSteps.length-1?`1px solid ${C.border}`:'none' }}>
+                  <div style={{ width:28, height:28, borderRadius:'50%', background:'#0a1428', border:`1px solid ${C.blue}44`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, color:C.blue, flexShrink:0, fontFamily:"'Syne',sans-serif" }}>{s.step}</div>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:C.text, marginBottom:3 }}>{s.title}</div>
+                    <div style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>{s.desc}</div>
+                  </div>
+                </div>
+              ))}
+              <div style={{ marginTop:16, padding:'12px 14px', background:'#060610', borderRadius:10 }}>
+                <div style={{ fontSize:11, color:C.muted, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:10 }}>Quick links by platform</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                  {platforms.map(([name, url]) => (
+                    <a key={name} href={url} target="_blank" rel="noopener noreferrer" style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:'5px 12px', fontSize:12, color:C.text, textDecoration:'none' }}>{name} →</a>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          </>)}
         </div>
-        {activeSchema && (
-          <Card>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:14 }}>
-              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, color:C.text }}>{SCHEMA_TYPES.find(s=>s.id===activeSchema)?.label} Schema</div>
-              <div style={{ display:'flex', gap:8 }}><Btn small outline color={C.muted}>Validate ↗</Btn><Btn small color={C.green}>Copy Code</Btn></div>
-            </div>
-            <pre style={{ fontSize:11, color:C.green, lineHeight:1.7, overflow:'auto', background:'#060610', borderRadius:10, padding:16 }}>{`<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "CafeOrCoffeeShop",\n  "name": "${profile.name}",\n  "url": "https://${profile.website}",\n  "telephone": "${profile.phone}"\n}\n</script>`}</pre>
-          </Card>
-        )}
-      </div>
-    )
+      )
+    }
 
     if (tab === 'Rank Tracker') return (
       <div>
@@ -399,6 +513,83 @@ export default function MerchantApp() {
       )
     }
 
+
+    if (tab === 'Help') {
+      const faqs = [
+        { q:'What is GEO and why does it matter?', a:'GEO stands for Generative Engine Optimization — optimizing your business to appear in AI-generated search responses from tools like ChatGPT, Perplexity, and Google Gemini. As AI search grows 300% year-over-year, appearing in AI answers is as important as ranking on Google.' },
+        { q:'What is a GEO Score?', a:'Your GEO Score (0–100) measures how visible your business is across both Google search and AI engines. It factors in your schema markup, NAP consistency, Google Business Profile completeness, AI citation coverage, and keyword rankings. Higher is better — aim for 80+.' },
+        { q:'How do I improve my GEO Score quickly?', a:'The fastest wins are: (1) Add FAQ schema from the Schema Builder, (2) Fill out your Business Profile completely, (3) Generate AI answer snippets for your most common customer questions, (4) Fix any NAP inconsistencies across directories.' },
+        { q:'What is schema markup and where do I put it?', a:'Schema markup is structured code that tells AI engines exactly what your business is. Go to Schema Builder, pick a type, copy the generated code, and paste it before the </head> tag on your website. See the step-by-step guide inside each schema type for platform-specific instructions.' },
+        { q:'How does the AI Citation Monitor work?', a:'We send automated queries to ChatGPT, Perplexity, Gemini, Bing Copilot, and Meta AI based on your tracked keywords, then check if your business appears in the responses. We check every 2–6 hours and show you exactly what each engine says about you.' },
+        { q:'How do AI Snippets help me get cited?', a:'AI engines cite businesses whose websites contain clear, authoritative answers to common questions. Our AI Snippet Generator creates perfectly formatted Q&A content optimized for citation. Publish these on your website as a FAQ page and AI engines will start pulling from them.' },
+        { q:'What is NAP consistency and why does it matter?', a:'NAP stands for Name, Address, Phone. AI engines cross-reference your business info across Google, Bing, Apple Maps, Yelp and other directories. If they differ (e.g. "St." vs "Street"), AI engines lose confidence in your listing and cite you less. Keep them identical everywhere.' },
+        { q:'How do I connect Google Search Console?', a:'Click the "Connect GSC" button on your Dashboard. You will be redirected to Google to authorize access. Once connected, your real keyword rankings, impressions, and click data will automatically import into your Rank Tracker.' },
+        { q:'How many locations can I manage?', a:'Starter: 1 location. Growth: 5 locations. Agency: unlimited. Each location has its own GEO Score, keyword tracker, snippet library, and reports. Upgrade from the Billing tab or the sidebar.' },
+        { q:'How long before I see results?', a:'AI citations can appear within days of publishing optimized content — AI engines crawl frequently. Google rank improvements typically take 2–6 weeks, which is normal for any SEO work. Most merchants see measurable AI citation improvement within 2 weeks.' },
+        { q:'How do I upgrade or change my plan?', a:'Go to the Billing tab in the sidebar, or click "Upgrade Plan" at the bottom of the sidebar. You can upgrade, downgrade, or cancel anytime. Changes take effect immediately.' },
+        { q:'I need help with something not listed here.', a:'Email us at hello@georankhq.co and we will get back to you within 24 hours. For urgent issues, book a 20-minute support call from the main landing page.' },
+      ]
+
+      const guides = [
+        { icon:'🚀', title:'Getting Started in 10 Minutes', steps:['Fill out your Business Profile completely','Add your first merchant location','Generate 3 AI snippets for common customer questions','Add Local Business schema to your website','Track your first 5 keywords'] },
+        { icon:'📈', title:'Improve Your GEO Score', steps:['Fix missing FAQ Schema (biggest impact)','Sync NAP data across all directories','Connect Google Search Console','Generate AI snippets for top 10 customer questions','Verify your Google Business Profile is active'] },
+        { icon:'🤖', title:'Get Cited by AI Engines', steps:['Create a FAQ page on your website','Add FAQ schema markup to that page','Generate AI snippets and publish them','Ensure your GBP has recent posts','Check citations weekly in AI Citations tab'] },
+      ]
+
+      const [openFaq, setOpenFaq] = useState(null)
+
+      return (
+        <div>
+          {/* Quick start guides */}
+          <div style={{ marginBottom:28 }}>
+            <Label>Quick Start Guides</Label>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14 }}>
+              {guides.map((g,i) => (
+                <Card key={i}>
+                  <div style={{ fontSize:24, marginBottom:10 }}>{g.icon}</div>
+                  <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, color:C.text, fontSize:14, marginBottom:12 }}>{g.title}</div>
+                  {g.steps.map((s,j) => (
+                    <div key={j} style={{ display:'flex', gap:10, marginBottom:8 }}>
+                      <div style={{ width:18, height:18, borderRadius:'50%', background:`${C.blue}22`, border:`1px solid ${C.blue}44`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:800, color:C.blue, flexShrink:0 }}>{j+1}</div>
+                      <div style={{ fontSize:12, color:C.muted, lineHeight:1.5 }}>{s}</div>
+                    </div>
+                  ))}
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* FAQ */}
+          <Label>Frequently Asked Questions</Label>
+          <Card style={{ padding:0, overflow:'hidden' }}>
+            {faqs.map((f,i) => (
+              <div key={i} style={{ borderBottom:i<faqs.length-1?`1px solid ${C.border}`:'none' }}>
+                <div onClick={()=>setOpenFaq(openFaq===i?null:i)} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 20px', cursor:'pointer', gap:16 }}>
+                  <span style={{ fontSize:13.5, fontWeight:600, color:C.text }}>{f.q}</span>
+                  <span style={{ color:openFaq===i?C.yellow:C.muted, fontSize:18, flexShrink:0, transition:'transform .2s', transform:openFaq===i?'rotate(45deg)':'none' }}>+</span>
+                </div>
+                {openFaq===i && (
+                  <div style={{ padding:'0 20px 16px', fontSize:13, color:C.muted, lineHeight:1.7 }}>{f.a}</div>
+                )}
+              </div>
+            ))}
+          </Card>
+
+          {/* Contact */}
+          <div style={{ marginTop:20, background:'linear-gradient(135deg,#0d1a0d,#1a2a0d)', border:'1px solid #1a3a0d', borderRadius:14, padding:'20px 24px', display:'flex', alignItems:'center', gap:20 }}>
+            <div style={{ fontSize:32 }}>💬</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, color:C.text, marginBottom:4 }}>Still need help?</div>
+              <div style={{ fontSize:13, color:C.muted }}>Our team replies within 24 hours. For urgent issues, book a support call.</div>
+            </div>
+            <div style={{ display:'flex', gap:10 }}>
+              <Btn small outline color={C.green} onClick={()=>window.open('mailto:hello@georankhq.co')}>Email Us</Btn>
+              <Btn small color={C.green} onClick={()=>window.open('https://georankhq.co/landing.html#contact')}>Book a Call</Btn>
+            </div>
+          </div>
+        </div>
+      )
+    }
     return null
   }
 
