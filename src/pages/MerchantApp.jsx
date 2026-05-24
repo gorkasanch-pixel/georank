@@ -26,6 +26,16 @@ function AuthScreen({ onAuth }) {
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState('')
 
+
+  const sendReset = async () => {
+    if (!email) { setErr('Please enter your email.'); return }
+    setLoading(true); setErr('')
+    // When Supabase auth is wired up, replace with:
+    // await supabase.auth.resetPasswordForEmail(email, { redirectTo: 'https://georankhq.co/app/reset' })
+    await new Promise(r => setTimeout(r, 800))
+    setLoading(false)
+    setErr('reset_sent')
+  }
   const go = async () => {
     if (!email || !pass) { setErr('All fields required.'); return }
     setLoading(true); setErr('')
@@ -58,10 +68,32 @@ function AuthScreen({ onAuth }) {
             ))}
             {err && <div style={{ color:C.red, fontSize:12, marginBottom:12 }}>{err}</div>}
             <Btn onClick={go} disabled={loading} style={{ width:'100%', marginBottom:14 }}>{loading ? 'Signing in…' : 'Sign In →'}</Btn>
-            <div style={{ textAlign:'center', fontSize:12 }}><span style={{ cursor:'pointer', color:C.blue }} onClick={()=>{setMode('signup');setStep(1);setErr('')}}>Create account →</span></div>
+            <div style={{ display:'flex', justifyContent:'space-between', fontSize:12 }}>
+              <span style={{ cursor:'pointer', color:C.muted }} onClick={()=>{setMode('forgot');setErr('')}}>Forgot password?</span>
+              <span style={{ cursor:'pointer', color:C.blue }} onClick={()=>{setMode('signup');setStep(1);setErr('')}}>Create account →</span>
+            </div>
           </Card>
         )}
 
+
+        {mode === 'forgot' && (
+          <Card>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:18, color:C.text, marginBottom:4 }}>Reset password</div>
+            <div style={{ color:C.muted, fontSize:13, marginBottom:20 }}>Enter your email and we'll send a reset link.</div>
+            <div style={{ marginBottom:14 }}>
+              <Label>Email</Label>
+              <input type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') sendReset() }} placeholder="you@business.com" style={{ width:'100%', background:'#060610', border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontSize:13.5, fontFamily:'inherit', outline:'none' }}/>
+            </div>
+            {err && <div style={{ color:C.red, fontSize:12, marginBottom:12 }}>{err}</div>}
+            {mode === 'forgot' && email && err === 'reset_sent' && (
+              <div style={{ background:`${C.green}11`, border:`1px solid ${C.green}33`, borderRadius:10, padding:'10px 14px', marginBottom:14, fontSize:13, color:C.green }}>
+                ✓ Reset link sent! Check your inbox.
+              </div>
+            )}
+            <Btn onClick={sendReset} disabled={loading} style={{ width:'100%', marginBottom:14 }}>{loading ? 'Sending…' : 'Send Reset Link →'}</Btn>
+            <div style={{ textAlign:'center', fontSize:12 }}><span style={{ cursor:'pointer', color:C.blue }} onClick={()=>{setMode('login');setErr('')}}>← Back to login</span></div>
+          </Card>
+        )}
         {mode === 'signup' && step === 1 && (
           <Card>
             <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:18, color:C.text, marginBottom:4 }}>Create account</div>
