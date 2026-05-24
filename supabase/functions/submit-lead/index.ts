@@ -12,7 +12,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const RESEND_API_KEY   = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE = Deno.env.get('SERVICE_ROLE_KEY')!  // service role bypasses RLS
-const FROM_EMAIL       = 'GEOrank <hello@georank.io>'
+const FROM_EMAIL = 'GEOrank <onboarding@resend.dev>'
 const ADMIN_EMAIL      = 'admin@georank.io'  // where YOU get notified of new leads
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE)
