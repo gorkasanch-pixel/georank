@@ -1,4 +1,4 @@
 export default function Landing() {
-  window.location.replace('/index.html')
+  window.location.replace('/landing.html')
   return null
 }
