@@ -227,7 +227,29 @@ export default function MerchantApp() {
   useEffect(() => { const u = db.get('user'); setUser(u); setBooting(false) }, [])
 
   const logout = () => { db.del('user'); setUser(null) }
-  const handlePlanSelect = (p) => { const u={...user,plan:p}; setUser(u); db.set('user',u); setUpgrade(false) }
+  const handlePlanSelect = async (p) => {
+    try {
+      const token = db.get('user')?.id || 'demo'
+      const res = await fetch('https://ezltbarrkvlfijbkwwam.supabase.co/functions/v1/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6bHRiYXJya3ZsZmlqYmt3d2FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NDA4NjEsImV4cCI6MjA5NTExNjg2MX0.uUbfHClcEkTDCccHTmxveXp2F_QFBWN9yFOLTgzYKmw'
+        },
+        body: JSON.stringify({ plan: p })
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        // Fallback: update locally if checkout fails (e.g. not using real auth yet)
+        const u = {...user, plan:p}; setUser(u); db.set('user', u); setUpgrade(false)
+      }
+    } catch(e) {
+      // Fallback to local update
+      const u = {...user, plan:p}; setUser(u); db.set('user', u); setUpgrade(false)
+    }
+  }
 
   if (booting) return <div style={{ minHeight:'100vh', background:C.bg, display:'flex', alignItems:'center', justifyContent:'center' }}><Spinner/></div>
   if (!user)   return <AuthScreen onAuth={u=>setUser(u)}/>
