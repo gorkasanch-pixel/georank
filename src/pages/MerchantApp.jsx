@@ -219,6 +219,7 @@ export default function MerchantApp() {
   const [showUpgrade, setUpgrade] = useState(false)
   const [activeSchema, setSchema] = useState(null)
   const [gbpConnected, setGbpConnected] = useState(false)
+  const [gscConnected, setGscConnected] = useState(false)
   const [openFaq, setOpenFaq]       = useState(null)
   const [keywords, setKeywords] = useState(SAMPLE_KEYWORDS)
   const [addingKw, setAddingKw] = useState(false)
@@ -230,11 +231,19 @@ export default function MerchantApp() {
     // Check if returning from GBP OAuth callback
     const params = new URLSearchParams(window.location.search)
     if (params.get('gbp') === 'connected') {
+      db.set('gbp_connected', true)
       setGbpConnected(true)
       window.history.replaceState({}, '', '/app/')
+    } else if (db.get('gbp_connected')) {
+      setGbpConnected(true)
     }
-    // Check stored GBP connection status
-    if (db.get('gbp_connected')) setGbpConnected(true)
+    if (params.get('gsc') === 'connected') {
+      db.set('gsc_connected', true)
+      setGscConnected(true)
+      window.history.replaceState({}, '', '/app/')
+    } else if (db.get('gsc_connected')) {
+      setGscConnected(true)
+    }
   }, [])
 
   const logout = () => { db.del('user'); setUser(null) }
@@ -276,7 +285,21 @@ export default function MerchantApp() {
                 <div style={{ fontSize:12, color:C.muted }}>{gsc ? <span style={{ color:C.green }}>✓ Connected · Syncing data</span> : 'Connect to import real keyword & CTR data'}</div>
               </div>
             </div>
-            {gsc ? <Pill color={C.green}>Live</Pill> : <Btn small color={C.blue} onClick={async()=>{ await new Promise(r=>setTimeout(r,1000)); setGsc(true) }}>Connect GSC</Btn>}
+            {gscConnected
+          ? <Pill color={C.green}>Live</Pill>
+          : <Btn small color={C.blue} onClick={async()=>{
+              try {
+                const res = await fetch('https://ezltbarrkvlfijbkwwam.supabase.co/functions/v1/connect-gsc?action=auth-url', {
+                  method:'POST',
+                  headers:{'Content-Type':'application/json'},
+                  body:JSON.stringify({ merchant_id: merchant.id })
+                })
+                const data = await res.json()
+                if (data.url) window.location.href = data.url
+                else alert('Error connecting GSC.')
+              } catch(e) { alert('Error: ' + e.message) }
+            }}>Connect GSC</Btn>
+        }
           </div>
         </Card>
         {/* Score rings */}
@@ -498,7 +521,7 @@ export default function MerchantApp() {
 
     if (tab === 'Rank Tracker') return (
       <div>
-        {!gsc && <div style={{ background:'#1a1000', border:'1px solid #3a2a00', borderRadius:12, padding:'12px 16px', marginBottom:16, fontSize:13, color:C.orange }}>⚡ Connect Google Search Console above to import real ranking data.</div>}
+        {!gscConnected && <div style={{ background:'#1a1000', border:'1px solid #3a2a00', borderRadius:12, padding:'12px 16px', marginBottom:16, fontSize:13, color:C.orange }}>⚡ Connect Google Search Console above to import real ranking data.</div>}
         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:14 }}>
           <div style={{ color:C.muted, fontSize:13 }}>Tracking {keywords.length} keywords</div>
           <Btn small onClick={()=>setAddingKw(true)}>+ Add Keyword</Btn>
