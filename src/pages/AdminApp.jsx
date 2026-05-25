@@ -42,41 +42,41 @@ function AdminLogin({ onAuth }) {
         </div>
 
         <Card>
-          {!mfa ? (
+          {forgot ? (
+            <>
+              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:17, color:C.text, marginBottom:4 }}>Reset admin password</div>
+              <div style={{ fontSize:12, color:C.muted, marginBottom:20 }}>Enter your admin email and we will send a reset link.</div>
+              <div style={{ marginBottom:14 }}>
+                <Label>Email</Label>
+                <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="admin@georankhq.co" style={{ width:'100%', background:'#060610', border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontSize:13.5, fontFamily:'inherit', outline:'none' }}/>
+              </div>
+              {resetSent && <div style={{ background:`${C.green}11`, border:`1px solid ${C.green}33`, borderRadius:10, padding:'10px 14px', marginBottom:14, fontSize:13, color:C.green }}>Reset link sent to {email}</div>}
+              <Btn onClick={async()=>{ setLoading(true); await new Promise(r=>setTimeout(r,800)); setLoading(false); setResetSent(true); }} disabled={loading} color={C.purple} style={{ width:'100%', marginBottom:12 }}>{loading?'Sending...':'Send Reset Link'}</Btn>
+              <div style={{ textAlign:'center', fontSize:12 }}><span style={{ cursor:'pointer', color:C.blue }} onClick={()=>{ setForgot(false); setResetSent(false); setErr(''); setLoading(false); }}>Back to login</span></div>
+            </>
+          ) : !mfa ? (
             <>
               <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:17, color:C.text, marginBottom:4 }}>Admin Sign In</div>
               <div style={{ fontSize:12, color:C.muted, marginBottom:20 }}>Restricted — authorized personnel only</div>
-              {[['Email','email',email,setEmail,'admin@georank.io'],['Password','password',pass,setPass,'••••••••']].map(([lbl,type,val,set,ph]) => (
+              {[['Email','email',email,setEmail,'admin@georankhq.co'],['Password','password',pass,setPass,'••••••••']].map(([lbl,type,val,set,ph]) => (
                 <div key={lbl} style={{ marginBottom:14 }}>
                   <Label>{lbl}</Label>
                   <input type={type} value={val} onChange={e=>set(e.target.value)} onKeyDown={e=>e.key==='Enter'&&attempt()} placeholder={ph} style={{ width:'100%', background:'#060610', border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontSize:13.5, fontFamily:'inherit', outline:'none' }}/>
                 </div>
               ))}
               {err && <div style={{ color:C.red, fontSize:12, marginBottom:12 }}>{err}</div>}
-              <Btn onClick={attempt} disabled={loading} color={C.purple} style={{ width:'100%' }}>{loading?'Verifying…':'Continue →'}</Btn>
-              <div style={{ textAlign:'center', marginTop:12, fontSize:12 }}>
+              <Btn onClick={attempt} disabled={loading} color={C.purple} style={{ width:'100%', marginBottom:12 }}>{loading?'Verifying...':'Continue'}</Btn>
+              <div style={{ textAlign:'center', fontSize:12 }}>
                 <span style={{ cursor:'pointer', color:C.muted }} onClick={()=>{ setForgot(true); setErr(''); setLoading(false); setResetSent(false); }}>Forgot password?</span>
               </div>
-            </>
-          ) : forgot ? (
-            <>
-              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:17, color:C.text, marginBottom:4 }}>Reset admin password</div>
-              <div style={{ fontSize:12, color:C.muted, marginBottom:20 }}>Enter your admin email and we'll send a reset link.</div>
-              <div style={{ marginBottom:14 }}>
-                <Label>Email</Label>
-                <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="admin@georankhq.co" style={{ width:'100%', background:'#060610', border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontSize:13.5, fontFamily:'inherit', outline:'none' }}/>
-              </div>
-              {resetSent && <div style={{ background:`${C.green}11`, border:`1px solid ${C.green}33`, borderRadius:10, padding:'10px 14px', marginBottom:14, fontSize:13, color:C.green }}>✓ Reset link sent to {email}</div>}
-              <button onClick={async()=>{ setLoading(true); await new Promise(r=>setTimeout(r,800)); setLoading(false); setResetSent(true); }} style={{ width:'100%', padding:'11px', background:resetSent?'#1a3a1a':C.purple, color:resetSent?C.green:'#07070f', border:'none', borderRadius:10, fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:"'Syne',sans-serif", marginBottom:12 }}>{loading?'Sending...':resetSent?'Reset link sent!':'Send Reset Link'}</button>
-              <div style={{ textAlign:'center', fontSize:12 }}><span style={{ cursor:'pointer', color:C.blue }} onClick={()=>{ setForgot(false); setResetSent(false); setErr('') }}>← Back to login</span></div>
             </>
           ) : (
             <>
               <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:17, color:C.text, marginBottom:4 }}>Two-Factor Auth</div>
               <div style={{ fontSize:12, color:C.muted, marginBottom:20 }}>Enter the 6-digit code from your authenticator app.</div>
               <input value={code} onChange={e=>setCode(e.target.value)} onKeyDown={e=>e.key==='Enter'&&verifyMfa()} placeholder="000 000" maxLength={7} style={{ width:'100%', background:'#060610', border:`1px solid ${C.purple}`, borderRadius:10, padding:'14px', color:C.text, fontSize:22, fontFamily:"'Syne',sans-serif", outline:'none', textAlign:'center', letterSpacing:'0.3em', marginBottom:16 }}/>
-              <Btn onClick={verifyMfa} disabled={loading} color={C.purple} style={{ width:'100%' }}>{loading?'Verifying…':'Access Dashboard →'}</Btn>
-              <div style={{ textAlign:'center', marginTop:12, fontSize:11, color:C.muted }}>Demo: any code works · <span style={{ color:C.blue, cursor:'pointer' }} onClick={()=>setMfa(false)}>← Back</span></div>
+              <Btn onClick={verifyMfa} disabled={loading} color={C.purple} style={{ width:'100%' }}>{loading?'Verifying...':'Access Dashboard'}</Btn>
+              <div style={{ textAlign:'center', marginTop:12, fontSize:11, color:C.muted }}>Demo: any code works · <span style={{ color:C.blue, cursor:'pointer' }} onClick={()=>setMfa(false)}>Back</span></div>
             </>
           )}
         </Card>
