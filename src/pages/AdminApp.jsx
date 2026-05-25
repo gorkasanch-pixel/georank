@@ -8,6 +8,8 @@ function AdminLogin({ onAuth }) {
   const [email, setEmail]   = useState('admin@georank.io')
   const [pass, setPass]     = useState('')
   const [mfa, setMfa]       = useState(false)
+  const [forgot, setForgot] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
   const [code, setCode]     = useState('')
   const [loading, setLoading] = useState(false)
   const [err, setErr]       = useState('')
@@ -52,6 +54,21 @@ function AdminLogin({ onAuth }) {
               ))}
               {err && <div style={{ color:C.red, fontSize:12, marginBottom:12 }}>{err}</div>}
               <Btn onClick={attempt} disabled={loading} color={C.purple} style={{ width:'100%' }}>{loading?'Verifying…':'Continue →'}</Btn>
+              <div style={{ textAlign:'center', marginTop:12, fontSize:12 }}>
+                <span style={{ cursor:'pointer', color:C.muted }} onClick={()=>{ setForgot(true); setErr('') }}>Forgot password?</span>
+              </div>
+            </>
+          ) : forgot ? (
+            <>
+              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:17, color:C.text, marginBottom:4 }}>Reset admin password</div>
+              <div style={{ fontSize:12, color:C.muted, marginBottom:20 }}>Enter your admin email and we'll send a reset link.</div>
+              <div style={{ marginBottom:14 }}>
+                <Label>Email</Label>
+                <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="admin@georankhq.co" style={{ width:'100%', background:'#060610', border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontSize:13.5, fontFamily:'inherit', outline:'none' }}/>
+              </div>
+              {resetSent && <div style={{ background:`${C.green}11`, border:`1px solid ${C.green}33`, borderRadius:10, padding:'10px 14px', marginBottom:14, fontSize:13, color:C.green }}>✓ Reset link sent to {email}</div>}
+              <Btn onClick={async()=>{ setLoading(true); await new Promise(r=>setTimeout(r,800)); setLoading(false); setResetSent(true); }} disabled={loading} color={C.purple} style={{ width:'100%', marginBottom:12 }}>{loading?'Sending…':'Send Reset Link →'}</Btn>
+              <div style={{ textAlign:'center', fontSize:12 }}><span style={{ cursor:'pointer', color:C.blue }} onClick={()=>{ setForgot(false); setResetSent(false); setErr('') }}>← Back to login</span></div>
             </>
           ) : (
             <>
