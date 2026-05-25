@@ -22,6 +22,11 @@ export default function GscCallback() {
         const data = await res.json()
         if (data.success) {
           setStatus(`Connected! Found ${data.sites?.length || 0} site(s). Redirecting...`)
+          // Store sites in localStorage for Rank Tracker
+          if (data.sites?.length > 0) {
+            localStorage.setItem('georank_gsc_sites', JSON.stringify(data.sites))
+            localStorage.setItem('georank_gsc_site_url', data.sites[0].siteUrl)
+          }
           setTimeout(() => { window.location.href = '/app/?gsc=connected' }, 1500)
         } else {
           setError(data.error || 'Connection failed. Please try again.')
