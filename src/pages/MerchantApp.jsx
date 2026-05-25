@@ -229,14 +229,10 @@ export default function MerchantApp() {
   const logout = () => { db.del('user'); setUser(null) }
   const handlePlanSelect = async (p) => {
     try {
-      const token = db.get('user')?.id || 'demo'
       const res = await fetch('https://ezltbarrkvlfijbkwwam.supabase.co/functions/v1/create-checkout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6bHRiYXJya3ZsZmlqYmt3d2FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NDA4NjEsImV4cCI6MjA5NTExNjg2MX0.uUbfHClcEkTDCccHTmxveXp2F_QFBWN9yFOLTgzYKmw'
-        },
-        body: JSON.stringify({ plan: p })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: p, email: user.email })
       })
       const data = await res.json()
       if (data.url) {
