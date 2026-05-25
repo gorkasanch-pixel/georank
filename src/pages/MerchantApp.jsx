@@ -165,7 +165,8 @@ function AiSnippetsTab({ merchant, planSnippets }) {
     setLoading(true)
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST', headers:{'Content-Type':'application/json'},
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':import.meta.env.VITE_ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
         body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000,
           messages:[{ role:'user', content:`GEO expert. Merchant: "${merchant.name}" (${merchant.category}, ${merchant.city}). Question: "${prompt}". Return ONLY valid JSON: {"shortAnswer":"2-3 sentence AI-citation answer","fullAnswer":"4-6 sentence FAQ","schema":"JSON-LD FAQ string","keywords":["kw1","kw2","kw3"]}` }] })
       })
