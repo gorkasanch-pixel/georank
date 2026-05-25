@@ -218,13 +218,24 @@ export default function MerchantApp() {
   const [gsc, setGsc]           = useState(false)
   const [showUpgrade, setUpgrade] = useState(false)
   const [activeSchema, setSchema] = useState(null)
+  const [gbpConnected, setGbpConnected] = useState(false)
   const [openFaq, setOpenFaq]       = useState(null)
   const [keywords, setKeywords] = useState(SAMPLE_KEYWORDS)
   const [addingKw, setAddingKw] = useState(false)
   const [newKw, setNewKw]       = useState('')
   const [profile, setProfile]   = useState({ name:'Bloom & Grind Coffee', category:'Café / Coffee Shop', address:'142 Merchant Row, Suite 4', phone:'(415) 555-0192', hours:'Mon–Fri 7am–8pm', website:'bloomandgrind.com', desc:'Artisan coffee, organic pastries, and a warm space to work or unwind.' })
 
-  useEffect(() => { const u = db.get('user'); setUser(u); setBooting(false) }, [])
+  useEffect(() => {
+    const u = db.get('user'); setUser(u); setBooting(false)
+    // Check if returning from GBP OAuth callback
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('gbp') === 'connected') {
+      setGbpConnected(true)
+      window.history.replaceState({}, '', '/app/')
+    }
+    // Check stored GBP connection status
+    if (db.get('gbp_connected')) setGbpConnected(true)
+  }, [])
 
   const logout = () => { db.del('user'); setUser(null) }
   const handlePlanSelect = async (p) => {
@@ -311,20 +322,27 @@ export default function MerchantApp() {
         </div>
         <div style={{ display:'flex', gap:10, marginBottom:20 }}>
           <Btn color={C.yellow}>Sync to All Directories →</Btn>
-          <Btn outline color={C.blue} onClick={async()=>{
-              try {
-                const res = await fetch('https://ezltbarrkvlfijbkwwam.supabase.co/functions/v1/connect-gbp?action=auth-url', {
-                  method:'POST',
-                  headers:{'Content-Type':'application/json'},
-                  body:JSON.stringify({ merchant_id: merchant.id })
-                })
-                const data = await res.json()
-                if (data.url) window.location.href = data.url
-                else alert('Error connecting GBP. Please try again.')
-              } catch(e) {
-                alert('Error: ' + e.message)
-              }
-            }}>Connect Google Business Profile</Btn>
+          { gbpConnected
+              ? <div style={{ display:'flex', alignItems:'center', gap:10, background:`${C.green}11`, border:`1px solid ${C.green}33`, borderRadius:10, padding:'10px 16px' }}>
+                  <span style={{ color:C.green, fontSize:16 }}>✓</span>
+                  <span style={{ fontSize:13, color:C.green, fontWeight:700 }}>Google Business Profile Connected</span>
+                  <Btn small outline color={C.muted} style={{ marginLeft:'auto' }} onClick={()=>{ setGbpConnected(false); db.del('gbp_connected') }}>Disconnect</Btn>
+                </div>
+              : <Btn outline color={C.blue} onClick={async()=>{
+                  try {
+                    const res = await fetch('https://ezltbarrkvlfijbkwwam.supabase.co/functions/v1/connect-gbp?action=auth-url', {
+                      method:'POST',
+                      headers:{'Content-Type':'application/json'},
+                      body:JSON.stringify({ merchant_id: merchant.id })
+                    })
+                    const data = await res.json()
+                    if (data.url) { db.set('gbp_connected', true); window.location.href = data.url }
+                    else alert('Error connecting GBP. Please try again.')
+                  } catch(e) {
+                    alert('Error: ' + e.message)
+                  }
+                }}>Connect Google Business Profile</Btn>
+            }
         </div>
         <Label>Directory Sync Status</Label>
         <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:8 }}>
