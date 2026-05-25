@@ -311,7 +311,20 @@ export default function MerchantApp() {
         </div>
         <div style={{ display:'flex', gap:10, marginBottom:20 }}>
           <Btn color={C.yellow}>Sync to All Directories →</Btn>
-          <Btn outline color={C.blue}>Connect Google Business Profile</Btn>
+          <Btn outline color={C.blue} onClick={async()=>{
+              try {
+                const res = await fetch('https://ezltbarrkvlfijbkwwam.supabase.co/functions/v1/connect-gbp?action=auth-url', {
+                  method:'POST',
+                  headers:{'Content-Type':'application/json'},
+                  body:JSON.stringify({ merchant_id: merchant.id })
+                })
+                const data = await res.json()
+                if (data.url) window.location.href = data.url
+                else alert('Error connecting GBP. Please try again.')
+              } catch(e) {
+                alert('Error: ' + e.message)
+              }
+            }}>Connect Google Business Profile</Btn>
         </div>
         <Label>Directory Sync Status</Label>
         <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:8 }}>
