@@ -55,7 +55,7 @@ function AdminLogin({ onAuth }) {
               {err && <div style={{ color:C.red, fontSize:12, marginBottom:12 }}>{err}</div>}
               <Btn onClick={attempt} disabled={loading} color={C.purple} style={{ width:'100%' }}>{loading?'Verifying…':'Continue →'}</Btn>
               <div style={{ textAlign:'center', marginTop:12, fontSize:12 }}>
-                <span style={{ cursor:'pointer', color:C.muted }} onClick={()=>{ setForgot(true); setErr('') }}>Forgot password?</span>
+                <span style={{ cursor:'pointer', color:C.muted }} onClick={()=>{ setForgot(true); setErr(''); setLoading(false); setResetSent(false); }}>Forgot password?</span>
               </div>
             </>
           ) : forgot ? (
