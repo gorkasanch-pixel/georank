@@ -363,7 +363,7 @@ async function runCheck() {
 
     const apiPromise = fetch(`${EDGE_BASE}/citation-crawler`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         businessName: name,
         keywords: [`${type}`, `best ${type}`, `${type} near me`, `top ${type}`],
