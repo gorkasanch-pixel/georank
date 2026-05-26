@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Free AI Visibility Check — GEOrankHQ</title>
+<meta name="description" content="Find out if your business shows up when customers ask ChatGPT, Perplexity, and Gemini for recommendations. Free instant check — no signup required."/>
+<meta name="google-site-verification" content="KnCLTvlINLN_Ci8S3Q3UgKx04GeuiAhJMm8Fvltmcjc"/>
+<link rel="icon" href="/favicon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:     #07070f;
+  --card:   #0d0d1a;
+  --border: #161628;
+  --text:   #d8d8ee;
+  --muted:  #525270;
+  --yellow: #f0c040;
+  --green:  #4ade80;
+  --blue:   #60a5fa;
+  --pink:   #f472b6;
+  --red:    #f87171;
+  --purple: #a78bfa;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+input, textarea { color-scheme: dark; }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 16px 48px; display: flex; align-items: center; justify-content: space-between;
+  background: rgba(7,7,15,0.9); backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.nav-logo-icon { width: 30px; height: 30px; background: linear-gradient(135deg,#f0c040,#f472b6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.nav-logo span { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #fff; letter-spacing: 0.05em; }
+.nav-back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color .15s; }
+.nav-back:hover { color: var(--text); }
+
+/* HERO */
+.hero { padding: 120px 24px 60px; text-align: center; position: relative; overflow: hidden; }
+.hero::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 700px; height: 500px;
+  background: radial-gradient(ellipse, rgba(240,192,64,0.07) 0%, rgba(96,165,250,0.04) 40%, transparent 70%);
+  pointer-events: none;
+}
+
+.badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25);
+  border-radius: 100px; padding: 5px 14px; font-size: 12px; color: var(--green);
+  margin-bottom: 24px; font-weight: 500;
+}
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.8s infinite; color: var(--green); }
+
+@keyframes pulse { 0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none} }
+@keyframes spin { to{transform:rotate(360deg)} }
+@keyframes slideIn { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none} }
+
+h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(48px,8vw,96px); line-height: 0.92; letter-spacing: 0.01em; color: #fff; margin-bottom: 20px; animation: fadeUp .5s ease both; }
+h1 .accent { background: linear-gradient(135deg,#f0c040,#f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+.hero-sub { font-size: clamp(16px,2.5vw,19px); color: var(--muted); max-width: 520px; margin: 0 auto 40px; line-height: 1.7; font-weight: 300; animation: fadeUp .5s .1s ease both; }
+.hero-sub strong { color: var(--text); font-weight: 500; }
+
+/* CHECKER CARD */
+.checker-wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; animation: fadeUp .5s .2s ease both; }
+
+.checker-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 32px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+}
+
+.field-group { margin-bottom: 14px; }
+.field-label { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 7px; display: block; }
+.field-input {
+  width: 100%; background: #060610; border: 1px solid var(--border); border-radius: 12px;
+  padding: 13px 16px; color: var(--text); font-size: 14.5px; font-family: 'DM Sans', sans-serif;
+  outline: none; transition: border-color .15s;
+}
+.field-input:focus { border-color: var(--yellow); }
+.field-input::placeholder { color: var(--muted); }
+
+.run-btn {
+  width: 100%; padding: 15px; background: var(--yellow); color: #07070f; border: none;
+  border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: all .15s; margin-top: 6px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.run-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(240,192,64,0.35); }
+.run-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.no-signup { font-size: 12px; color: var(--muted); text-align: center; margin-top: 12px; }
+
+/* PROGRESS */
+.progress-wrap { display: none; margin-top: 24px; }
+.progress-step {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--border); font-size: 13.5px; color: var(--muted);
+  transition: color .3s;
+}
+.progress-step.active { color: var(--text); }
+.progress-step.done { color: var(--green); }
+.step-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.step-spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top: 2px solid var(--yellow); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+
+/* RESULTS */
+.results-wrap { display: none; margin-top: 28px; animation: slideIn .4s ease; }
+
+.overall-score {
+  background: linear-gradient(135deg, #0d1a0d, #0a1020);
+  border: 1px solid rgba(240,192,64,0.2); border-radius: 16px; padding: 24px;
+  text-align: center; margin-bottom: 20px;
+}
+.score-num { font-family: 'Bebas Neue', sans-serif; font-size: 72px; line-height: 1; margin-bottom: 4px; }
+.score-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+.score-bar-wrap { height: 6px; background: #111128; border-radius: 3px; margin: 0 auto; max-width: 240px; }
+.score-bar { height: 6px; border-radius: 3px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+
+.engines-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.engine-row {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+  background: #060610; border-radius: 12px; border: 1px solid var(--border);
+  animation: slideIn .4s ease both;
+}
+.engine-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+.engine-info { flex: 1; min-width: 0; }
+.engine-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+.engine-name { font-weight: 700; font-size: 13.5px; color: var(--text); }
+.engine-snippet { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.pill { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; white-space: nowrap; }
+.pill-green { background: rgba(74,222,128,0.15); color: var(--green); }
+.pill-red   { background: rgba(248,113,113,0.15); color: var(--red); }
+.pill-gray  { background: rgba(82,82,112,0.2); color: var(--muted); }
+
+/* RECOMMENDATIONS */
+.recs { background: #060610; border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+.recs-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--text); margin-bottom: 14px; letter-spacing: 0.03em; }
+.rec-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.rec-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.rec-text { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.rec-text strong { color: var(--text); }
+
+/* CTA */
+.cta-box {
+  background: linear-gradient(135deg, #0d1a0d, #0a1020);
+  border: 1px solid rgba(240,192,64,0.2); border-radius: 16px; padding: 24px; text-align: center;
+}
+.cta-box h3 { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: #fff; margin-bottom: 8px; letter-spacing: 0.03em; }
+.cta-box p { font-size: 14px; color: var(--muted); margin-bottom: 18px; line-height: 1.6; }
+.cta-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--yellow); color: #07070f; border: none; border-radius: 12px;
+  padding: 13px 28px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; text-decoration: none; transition: all .15s;
+}
+.cta-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(240,192,64,0.35); }
+.cta-trust { display: flex; justify-content: center; gap: 20px; margin-top: 14px; flex-wrap: wrap; }
+.cta-trust span { font-size: 12px; color: var(--muted); }
+
+/* SOCIAL PROOF */
+.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; max-width: 640px; margin-left: auto; margin-right: auto; padding: 0 16px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; text-align: center; }
+.stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--yellow); line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* HOW IT WORKS */
+.how-section { max-width: 640px; margin: 64px auto 0; padding: 0 16px 80px; }
+.how-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--text); text-align: center; margin-bottom: 24px; letter-spacing: 0.03em; }
+.how-steps { display: flex; flex-direction: column; gap: 0; }
+.how-step { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.how-step:last-child { border-bottom: none; }
+.how-num { width: 32px; height: 32px; border-radius: 50%; background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.3); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--yellow); flex-shrink: 0; }
+.how-content h4 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.how-content p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+@media (max-width: 600px) {
+  nav { padding: 14px 20px; }
+  .checker-card { padding: 22px 18px; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .stat-card:last-child { grid-column: span 2; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">✦</div>
+    <span>GEOrankHQ</span>
+  </a>
+  <a href="/landing.html" class="nav-back">← Back to home</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge"><div class="badge-dot"></div>Free · No signup required · Results in 30 seconds</div>
+  <h1>IS YOUR BUSINESS<br>VISIBLE IN<br><span class="accent">AI SEARCH?</span></h1>
+  <p class="hero-sub">
+    Find out if ChatGPT, Perplexity & Gemini mention your business when customers search for what you offer.
+    <strong>Free instant check.</strong>
+  </p>
+</div>
+
+<!-- CHECKER -->
+<div class="checker-wrap">
+  <div class="checker-card">
+
+    <div class="field-group">
+      <label class="field-label" for="biz-name">Business name</label>
+      <input class="field-input" id="biz-name" type="text" placeholder="e.g. Bloom & Grind Coffee"/>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="biz-type">What do you offer?</label>
+      <input class="field-input" id="biz-type" type="text" placeholder="e.g. artisan coffee shop, personal trainer, dental clinic"/>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="biz-city">City / Location</label>
+      <input class="field-input" id="biz-city" type="text" placeholder="e.g. San Francisco, CA"/>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="biz-email">Email (to receive your full report)</label>
+      <input class="field-input" id="biz-email" type="email" placeholder="you@yourbusiness.com"/>
+    </div>
+
+    <button class="run-btn" id="run-btn" onclick="runCheck()">
+      <span id="btn-text">Check My AI Visibility →</span>
+    </button>
+
+    <p class="no-signup">✓ Free forever · No credit card · No spam</p>
+
+    <!-- Progress steps -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-step" id="step-1">
+        <div class="step-icon" id="step-1-icon">🔮</div>
+        <span>Querying Perplexity AI...</span>
+      </div>
+      <div class="progress-step" id="step-2">
+        <div class="step-icon" id="step-2-icon">🤖</div>
+        <span>Querying ChatGPT...</span>
+      </div>
+      <div class="progress-step" id="step-3">
+        <div class="step-icon" id="step-3-icon">✨</div>
+        <span>Querying Google Gemini...</span>
+      </div>
+      <div class="progress-step" id="step-4">
+        <div class="step-icon" id="step-4-icon">📊</div>
+        <span>Calculating your GEO Score...</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Results -->
+  <div class="results-wrap" id="results-wrap"></div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num">11B+</div>
+    <div class="stat-label">AI search queries per month</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">5×</div>
+    <div class="stat-label">Higher conversion from AI vs Google traffic</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">89%</div>
+    <div class="stat-label">Of buyers use AI to find local businesses</div>
+  </div>
+</div>
+
+<!-- How it works -->
+<div class="how-section">
+  <div class="how-title">HOW THE CHECK WORKS</div>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-num">1</div>
+      <div class="how-content">
+        <h4>We query 3 AI engines</h4>
+        <p>We ask Perplexity, ChatGPT, and Google Gemini "what are the best [your business type] in [your city]?" — exactly like your customers would.</p>
+      </div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">2</div>
+      <div class="how-content">
+        <h4>We check if you're mentioned</h4>
+        <p>We scan each AI response for your business name and extract the exact snippet where you appear — or flag when you don't.</p>
+      </div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">3</div>
+      <div class="how-content">
+        <h4>You get your GEO Score</h4>
+        <p>We calculate a score from 0–100 and give you a prioritized list of exactly what to fix to start appearing in AI search results.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6bHRiYXJya3ZsZmlqYmt3d2FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NDA4NjEsImV4cCI6MjA5NTExNjg2MX0.uUbfHClcEkTDCccHTmxveXp2F_QFBWN9yFOLTgzYKmw'
+const EDGE_BASE = 'https://ezltbarrkvlfijbkwwam.supabase.co/functions/v1'
+
+let checkResults = null
+
+async function runCheck() {
+  const name  = document.getElementById('biz-name').value.trim()
+  const type  = document.getElementById('biz-type').value.trim()
+  const city  = document.getElementById('biz-city').value.trim()
+  const email = document.getElementById('biz-email').value.trim()
+
+  if (!name || !type) {
+    alert('Please enter your business name and what you offer.')
+    return
+  }
+
+  const btn = document.getElementById('run-btn')
+  btn.disabled = true
+  document.getElementById('btn-text').textContent = 'Running check…'
+
+  // Show progress
+  const pw = document.getElementById('progress-wrap')
+  pw.style.display = 'block'
+  document.getElementById('results-wrap').style.display = 'none'
+
+  const steps = ['step-1','step-2','step-3','step-4']
+
+  // Animate steps
+  const animateStep = (id, delay) => new Promise(r => setTimeout(() => {
+    const el = document.getElementById(id)
+    el.classList.add('active')
+    const icon = document.getElementById(id + '-icon')
+    icon.innerHTML = '<div class="step-spinner"></div>'
+    setTimeout(() => {
+      el.classList.remove('active')
+      el.classList.add('done')
+      icon.innerHTML = '✓'
+      r()
+    }, delay)
+  }, 200))
+
+  try {
+    // Start animation and API call in parallel
+    const animPromise = (async () => {
+      await animateStep('step-1', 3000)
+      await animateStep('step-2', 3000)
+      await animateStep('step-3', 3000)
+      await animateStep('step-4', 1000)
+    })()
+
+    const apiPromise = fetch(`${EDGE_BASE}/citation-crawler`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON}` },
+      body: JSON.stringify({
+        businessName: name,
+        keywords: [`${type}`, `best ${type}`, `${type} near me`, `top ${type}`],
+        city,
+      })
+    }).then(r => r.json())
+
+    const [_, apiData] = await Promise.all([animPromise, apiPromise])
+
+    if (apiData.error) throw new Error(apiData.error)
+
+    checkResults = apiData.results
+
+    // Save lead to Supabase if email provided
+    if (email) {
+      fetch(`${EDGE_BASE}/submit-lead`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON}` },
+        body: JSON.stringify({ type: 'waitlist', firstName: name.split(' ')[0] || name, email, businessType: type, note: `Free check for: ${name} in ${city}` })
+      }).catch(() => {})
+    }
+
+    showResults(name, type, city, checkResults)
+
+  } catch(e) {
+    btn.disabled = false
+    document.getElementById('btn-text').textContent = 'Check My AI Visibility →'
+    pw.style.display = 'none'
+    alert('Something went wrong. Please try again.')
+    console.error(e)
+  }
+}
+
+function showResults(name, type, city, results) {
+  const engines = Object.values(results)
+  const realEngines = engines.filter(e => !e.noApi)
+  const citedCount = realEngines.filter(e => e.cited).length
+  const score = Math.round((citedCount / realEngines.length) * 100)
+  const scoreColor = score >= 67 ? '#4ade80' : score >= 34 ? '#f0c040' : '#f87171'
+  const scoreLabel = score >= 67 ? 'Good visibility' : score >= 34 ? 'Partial visibility' : 'Low visibility'
+
+  const recs = []
+  if (!results.perplexity?.cited) recs.push({ icon:'⚡', text:'<strong>Add FAQ schema markup</strong> to your website — Perplexity pulls directly from structured Q&A data' })
+  if (!results.openai?.cited) recs.push({ icon:'🤖', text:'<strong>Publish AI-optimized answer content</strong> — ChatGPT cites businesses with clear, authoritative FAQ pages' })
+  if (!results.gemini?.cited) recs.push({ icon:'✨', text:'<strong>Complete your Google Business Profile</strong> — Gemini heavily weights GBP data for local recommendations' })
+  if (citedCount === 0) recs.push({ icon:'🏗️', text:'<strong>Add LocalBusiness schema</strong> to your website — the single highest-impact change for AI visibility' })
+  recs.push({ icon:'📈', text:'<strong>Build citation momentum</strong> — get mentioned on Yelp, TripAdvisor, and local directories to build AI authority' })
+
+  const engineRows = engines.map((e, i) => `
+    <div class="engine-row" style="animation-delay:${i * 0.1}s">
+      <span class="engine-icon">${e.icon}</span>
+      <div class="engine-info">
+        <div class="engine-header">
+          <span class="engine-name">${e.name}</span>
+          ${e.noApi
+            ? '<span class="pill pill-gray">No Public API</span>'
+            : e.cited
+              ? '<span class="pill pill-green">✓ Cited</span>'
+              : '<span class="pill pill-red">✗ Not Cited</span>'
+          }
+        </div>
+        <div class="engine-snippet">
+          ${e.noApi
+            ? 'This engine does not offer a public API for real-time citation checking.'
+            : e.cited && e.results?.find(r => r.cited)?.snippet
+              ? `"${e.results.find(r => r.cited).snippet}"`
+              : e.cited
+                ? `${name} was mentioned in AI responses for your tracked queries.`
+                : `${name} did not appear in responses for "${type}${city ? ' in ' + city : ''}". See recommendations below to fix this.`
+          }
+        </div>
+      </div>
+    </div>
+  `).join('')
+
+  const recItems = recs.map(r => `
+    <div class="rec-item">
+      <span class="rec-icon">${r.icon}</span>
+      <span class="rec-text">${r.text}</span>
+    </div>
+  `).join('')
+
+  const html = `
+    <div class="overall-score">
+      <div class="score-num" style="color:${scoreColor}">${score}</div>
+      <div class="score-label">AI Visibility Score — ${scoreLabel}</div>
+      <div class="score-bar-wrap"><div class="score-bar" id="score-bar" style="width:0%;background:${scoreColor}"></div></div>
+      <div style="margin-top:12px;font-size:13px;color:var(--muted)">
+        <strong style="color:${scoreColor}">${name}</strong> is cited in <strong style="color:var(--text)">${citedCount} of ${realEngines.length}</strong> AI engines we checked
+      </div>
+    </div>
+
+    <div class="engines-grid">${engineRows}</div>
+
+    <div class="recs">
+      <div class="recs-title">Your Top Fixes</div>
+      ${recItems}
+    </div>
+
+    <div class="cta-box">
+      <h3>${score < 34 ? "YOU'RE INVISIBLE TO AI SEARCH" : score < 67 ? "YOU'RE PARTIALLY VISIBLE" : "GOOD START — NOW DOMINATE"}</h3>
+      <p>
+        ${score < 34
+          ? `${name} is not appearing in AI search results. Every day you wait, customers are finding your competitors instead.`
+          : score < 67
+          ? `${name} is showing up in some AI engines but missing others. Full optimization could triple your AI search visibility.`
+          : `${name} has good AI visibility. GEOrankHQ can help you maintain and expand it across more keywords and engines.`
+        }
+      </p>
+      <a href="/landing.html#pricing" class="cta-btn">Fix My AI Visibility — Free 14-day Trial →</a>
+      <div class="cta-trust">
+        <span>✓ No credit card</span>
+        <span>✓ 14-day free trial</span>
+        <span>✓ Cancel anytime</span>
+      </div>
+    </div>
+  `
+
+  const rw = document.getElementById('results-wrap')
+  rw.innerHTML = html
+  rw.style.display = 'block'
+
+  // Animate score bar
+  setTimeout(() => {
+    const bar = document.getElementById('score-bar')
+    if (bar) bar.style.width = score + '%'
+  }, 100)
+
+  // Scroll to results
+  rw.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+  document.getElementById('run-btn').disabled = false
+  document.getElementById('btn-text').textContent = 'Check Another Business'
+}
+
+// Allow Enter key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') runCheck()
+})
+</script>
+</body>
+</html>
