@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Unsubscribe — GEOrankHQ</title>
+<link rel="icon" href="/favicon.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #07070f; color: #d8d8ee; font-family: 'DM Sans', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.card { background: #0d0d1a; border: 1px solid #161628; border-radius: 20px; padding: 40px 36px; max-width: 440px; width: 100%; text-align: center; }
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: #fff; margin-bottom: 28px; letter-spacing: 0.05em; }
+.logo span { color: #f0c040; }
+.icon { font-size: 48px; margin-bottom: 16px; }
+h1 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #fff; margin-bottom: 10px; letter-spacing: 0.03em; }
+p { font-size: 14px; color: #525270; line-height: 1.7; margin-bottom: 24px; }
+p strong { color: #d8d8ee; }
+.btn-primary { display: block; width: 100%; padding: 13px; background: #f87171; color: #07070f; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 10px; transition: all .15s; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(248,113,113,0.3); }
+.btn-secondary { display: block; width: 100%; padding: 13px; background: transparent; color: #525270; border: 1px solid #161628; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all .15s; }
+.btn-secondary:hover { border-color: #525270; color: #d8d8ee; }
+.success { display: none; }
+.success .icon { font-size: 48px; }
+.success h1 { color: #4ade80; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">GEO<span>rankHQ</span></div>
+
+  <div id="confirm-view">
+    <div class="icon">📧</div>
+    <h1>Unsubscribe</h1>
+    <p>You're about to unsubscribe <strong id="email-display"></strong> from GEOrankHQ emails.</p>
+    <p>You'll no longer receive waitlist updates or product news. You'll still receive important account and billing emails if you have an account.</p>
+    <button class="btn-primary" onclick="unsubscribe()">Yes, unsubscribe me</button>
+    <a href="/landing.html" class="btn-secondary">Cancel — keep me subscribed</a>
+  </div>
+
+  <div class="success" id="success-view">
+    <div class="icon">✅</div>
+    <h1>Unsubscribed</h1>
+    <p>You've been removed from our mailing list. Sorry to see you go!</p>
+    <p>If you change your mind, you can always rejoin at <strong>georankhq.co</strong>.</p>
+    <a href="/landing.html" class="btn-secondary">Back to GEOrankHQ</a>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL  = 'https://ezltbarrkvlfijbkwwam.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6bHRiYXJya3ZsZmlqYmt3d2FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NDA4NjEsImV4cCI6MjA5NTExNjg2MX0.uUbfHClcEkTDCccHTmxveXp2F_QFBWN9yFOLTgzYKmw'
+
+const params = new URLSearchParams(window.location.search)
+const email  = params.get('email') || ''
+
+document.getElementById('email-display').textContent = email || 'your email address'
+
+async function unsubscribe() {
+  try {
+    // Update waitlist status to unsubscribed
+    await fetch(`${SUPABASE_URL}/rest/v1/waitlist?email=eq.${encodeURIComponent(email)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+      },
+      body: JSON.stringify({ status: 'unsubscribed' })
+    })
+  } catch(e) {
+    console.error('Unsubscribe error:', e)
+  }
+
+  // Show success regardless (graceful degradation)
+  document.getElementById('confirm-view').style.display = 'none'
+  document.getElementById('success-view').style.display = 'block'
+}
+</script>
+</body>
+</html>
