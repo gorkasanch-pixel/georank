@@ -1,8 +1,15 @@
 {
-  "rewrites": [
-    { "source": "/app", "destination": "/index.html" },
-    { "source": "/app/(.*)", "destination": "/index.html" },
-    { "source": "/admin", "destination": "/index.html" },
-    { "source": "/admin/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "src": "/landing.html", "dest": "/landing.html" },
+    { "src": "/check.html", "dest": "/check.html" },
+    { "src": "/legal.html", "dest": "/legal.html" },
+    { "src": "/unsubscribe.html", "dest": "/unsubscribe.html" },
+    { "src": "/app/gbp-callback", "dest": "/index.html" },
+    { "src": "/app/gsc-callback", "dest": "/index.html" },
+    { "src": "/app(.*)", "dest": "/index.html" },
+    { "src": "/admin(.*)", "dest": "/index.html" },
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/favicon.svg", "dest": "/favicon.svg" },
+    { "src": "/", "dest": "/landing.html" }
   ]
 }

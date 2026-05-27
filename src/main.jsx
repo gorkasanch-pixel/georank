@@ -12,8 +12,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/landing.html" replace />} />
-        <Route path="/app/*"   element={<MerchantApp />} />
-        <Route path="/*"       element={<MerchantApp />} />
+        <Route path="/app/*" element={<MerchantApp />} />
         <Route path="/admin/*" element={<AdminApp />} />
         <Route path="/app/gbp-callback" element={<GbpCallback />} />
         <Route path="/app/gsc-callback" element={<GscCallback />} />
