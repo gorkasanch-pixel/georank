@@ -332,6 +332,8 @@ export default function MerchantApp() {
                 else alert('Error connecting GSC.')
               } catch(e) { alert('Error: ' + e.message) }
             }}>Connect GSC</Btn>
+              } catch(e) { alert('Error: ' + e.message) }
+            }}>Connect GSC</Btn>
         }
           </div>
         </Card>
