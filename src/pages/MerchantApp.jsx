@@ -967,15 +967,16 @@ export default function MerchantApp() {
                 const compScores = businesses.filter(b => b !== profile.name).map(b => getCitedCount(compResults[b]))
                 const avgComp = compScores.length ? Math.round(compScores.reduce((a,b)=>a+b,0) / compScores.length) : 0
                 const leading = yourScore > avgComp
+                const tied = yourScore === avgComp
                 return (
                   <Card style={{ background: leading ? '#0a1a0a' : '#1a0a0a', border:`1px solid ${leading ? '#1a3a1a' : '#3a1a1a'}` }}>
-                    <div style={{ fontSize:14, fontWeight:700, color: leading ? C.green : C.red, marginBottom:8 }}>
-                      {leading ? '🏆 You are ahead of your competitors!' : '⚠️ Your competitors have better AI visibility'}
+                    <div style={{ fontSize:14, fontWeight:700, color: leading ? C.green : tied ? C.yellow : C.red, marginBottom:8 }}>
+                      {leading ? '🏆 You are ahead of your competitors!' : tied ? '🤝 You are tied with your competitors' : '⚠️ Your competitors have better AI visibility'}
                     </div>
                     <div style={{ fontSize:13, color:C.muted, lineHeight:1.7 }}>
                       {leading
                         ? `You appear in ${yourScore}/3 AI engines vs an average of ${avgComp}/3 for your competitors. Keep optimizing to maintain your lead.`
-                        : `You appear in ${yourScore}/3 AI engines vs an average of ${avgComp}/3 for your competitors. Use the Schema Builder and AI Snippets to close the gap.`
+                        : tied ? `Everyone is at ${yourScore}/3. Use Schema Builder and AI Snippets to get ahead of your competitors.` : `You appear in ${yourScore}/3 AI engines vs an average of ${avgComp}/3 for your competitors. Use Schema Builder and AI Snippets to close the gap.`
                       }
                     </div>
                     {!leading && (
