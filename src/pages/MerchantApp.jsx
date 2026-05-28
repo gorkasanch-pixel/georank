@@ -668,7 +668,7 @@ export default function MerchantApp() {
         ? Object.values(citationResults)
         : [{name:'Perplexity AI',icon:'🔮',cited:null,noApi:false},{name:'ChatGPT',icon:'🤖',cited:null,noApi:false},{name:'Google Gemini',icon:'✨',cited:null,noApi:false},{name:'Bing Copilot',icon:'🪟',cited:null,noApi:true},{name:'Meta AI',icon:'📘',cited:null,noApi:true}]
 
-      const citedCount = citationResults ? Object.values(citationResults).filter((e:any) => e.cited && !e.noApi).length : 0
+      const citedCount = citationResults ? Object.values(citationResults).filter((e) => e.cited && !e.noApi).length : 0
       const totalEngines = 3 // engines with APIs
 
       return (
@@ -698,7 +698,7 @@ export default function MerchantApp() {
 
           {/* Engine results */}
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {engines.map((e:any, i:number) => (
+            {engines.map((e, i) => (
               <div key={i} style={{ display:'flex', gap:12, padding:'14px 16px', background:'#060610', borderRadius:12, border:`1px solid ${e.cited===true?C.green+'33':e.cited===false&&!e.noApi?C.red+'22':C.border}` }}>
                 <span style={{ fontSize:22, flexShrink:0 }}>{e.icon}</span>
                 <div style={{ flex:1 }}>
@@ -716,7 +716,7 @@ export default function MerchantApp() {
                   {!e.noApi && e.cited === true && e.results && (
                     <div style={{ fontSize:12, color:C.muted }}>
                       Cited in {e.citedCount} of {e.totalChecked} keyword searches.
-                      {e.results.find((r:any)=>r.cited)?.snippet && <span> "{e.results.find((r:any)=>r.cited).snippet}"</span>}
+                      {e.results.find((r)=>r.cited)?.snippet && <span> "{e.results.find((r)=>r.cited).snippet}"</span>}
                     </div>
                   )}
                   {!e.noApi && e.cited === false && e.cited !== null && (
@@ -726,7 +726,7 @@ export default function MerchantApp() {
                     <details style={{ marginTop:8 }}>
                       <summary style={{ cursor:'pointer', fontSize:11, color:C.muted, fontWeight:700 }}>View keyword breakdown</summary>
                       <div style={{ marginTop:8 }}>
-                        {e.results.map((r:any, j:number) => (
+                        {e.results.map((r, j) => (
                           <div key={j} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', borderBottom:`1px solid ${C.border}`, fontSize:12 }}>
                             <span style={{ color:r.cited?C.green:C.red }}>{r.cited?'✓':'✗'}</span>
                             <span style={{ color:C.text, flex:1 }}>{r.keyword}</span>
@@ -970,7 +970,7 @@ export default function MerchantApp() {
                 return (
                   <Card style={{ background: leading ? '#0a1a0a' : '#1a0a0a', border:`1px solid ${leading ? '#1a3a1a' : '#3a1a1a'}` }}>
                     <div style={{ fontSize:14, fontWeight:700, color: leading ? C.green : C.red, marginBottom:8 }}>
-                      {leading ? '🏆 You're ahead of your competitors!' : '⚠️ Your competitors have better AI visibility'}
+                      {leading ? '🏆 You are ahead of your competitors!' : '⚠️ Your competitors have better AI visibility'}
                     </div>
                     <div style={{ fontSize:13, color:C.muted, lineHeight:1.7 }}>
                       {leading
