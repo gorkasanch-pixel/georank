@@ -206,8 +206,8 @@ function AiSnippetsTab({ merchant, planSnippets }) {
   )
 }
 
-const TABS  = ['Dashboard','Business Profile','AI Snippets','Schema Builder','Rank Tracker','AI Citations','Reports','Billing','Help']
-const ICONS = ['📊','🏪','🤖','🏗️','📈','🔮','📋','💳','❓']
+const TABS  = ['Dashboard','Business Profile','AI Snippets','Schema Builder','Rank Tracker','AI Citations','Competitor Tracker','Reports','Billing','Help']
+const ICONS = ['📊','🏪','🤖','🏗️','📈','🔮','🥊','📋','💳','❓']
 
 export default function MerchantApp() {
   const [user, setUser]         = useState(null)
@@ -223,6 +223,9 @@ export default function MerchantApp() {
   const [gscLoading, setGscLoading]     = useState(false)
   const [gscSiteUrl, setGscSiteUrl]     = useState('')
   const [gscSites, setGscSites]         = useState([])
+  const [competitors, setCompetitors]   = useState(() => db.get('competitors') || ['',''])
+  const [compResults, setCompResults]   = useState(() => db.get('comp_results') || null)
+  const [compCrawling, setCompCrawling] = useState(false)
   const [openFaq, setOpenFaq]       = useState(null)
   const [keywords, setKeywords] = useState(() => db.get('gsc_keywords') || SAMPLE_KEYWORDS)
   const [addingKw, setAddingKw] = useState(false)
@@ -252,6 +255,36 @@ export default function MerchantApp() {
   }, [])
 
   const logout = () => { db.del('user'); setUser(null) }
+
+  const runCompetitorCrawl = async () => {
+    const activeComps = competitors.filter(c => c.trim())
+    if (!activeComps.length) { alert('Add at least one competitor name.'); return }
+    if (!keywords.length) { alert('Add keywords in Rank Tracker first.'); return }
+    setCompCrawling(true)
+    try {
+      const results = {}
+      // Crawl your own business
+      const myRes = await fetch('https://ezltbarrkvlfijbkwwam.supabase.co/functions/v1/citation-crawler', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessName: profile.name, keywords: keywords.map(k=>k.keyword).slice(0,3), city: merchant.city })
+      }).then(r=>r.json())
+      results[profile.name] = { ...myRes.results, isYou: true }
+
+      // Crawl each competitor
+      for (const comp of activeComps) {
+        const compRes = await fetch('https://ezltbarrkvlfijbkwwam.supabase.co/functions/v1/citation-crawler', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ businessName: comp, keywords: keywords.map(k=>k.keyword).slice(0,3), city: merchant.city })
+        }).then(r=>r.json())
+        results[comp] = compRes.results
+      }
+      setCompResults(results)
+      db.set('comp_results', results)
+    } catch(e) { alert('Crawl failed: ' + e.message) }
+    setCompCrawling(false)
+  }
 
   const fetchGscKeywords = async (siteUrl) => {
     const url = siteUrl || db.get('gsc_site_url')
@@ -330,8 +363,6 @@ export default function MerchantApp() {
                 const data = await res.json()
                 if (data.url) window.location.href = data.url
                 else alert('Error connecting GSC.')
-              } catch(e) { alert('Error: ' + e.message) }
-            }}>Connect GSC</Btn>
               } catch(e) { alert('Error: ' + e.message) }
             }}>Connect GSC</Btn>
         }
@@ -597,31 +628,121 @@ export default function MerchantApp() {
       </div>
     )
 
-    if (tab === 'AI Citations') return (
-      <div>
-        <div style={{ color:C.muted, fontSize:13, marginBottom:20 }}>GEOrank crawls AI engines every 2–6 hours to detect whether your business is cited for your tracked keywords.</div>
-        <Card>
-          <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, color:C.text, marginBottom:16, display:'flex', justifyContent:'space-between' }}>
-            <span>Engine Citation Status</span>
-            <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:C.muted }}><Pulse color={C.green}/>Live crawl</div>
-          </div>
-          {[{name:'Perplexity AI',cited:true,icon:'🔮',checked:'2 hrs ago',snippet:'…best artisan coffee in downtown…'},{name:'ChatGPT',cited:true,icon:'🤖',checked:'5 hrs ago',snippet:'…cozy work-friendly space with quality espresso…'},{name:'Google SGE',cited:false,icon:'🔍',checked:'1 hr ago',snippet:null},{name:'Bing Copilot',cited:true,icon:'🪟',checked:'3 hrs ago',snippet:'…highly rated café with vegan options…'},{name:'Meta AI',cited:false,icon:'📘',checked:'6 hrs ago',snippet:null}].map(e => (
-            <div key={e.name} style={{ display:'flex', gap:12, padding:'14px 16px', background:'#060610', borderRadius:12, border:`1px solid ${e.cited?C.green+'33':C.border}`, marginBottom:10 }}>
-              <span style={{ fontSize:22, flexShrink:0 }}>{e.icon}</span>
-              <div style={{ flex:1 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
-                  <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:13, color:C.text }}>{e.name}</span>
-                  <Pill color={e.cited?C.green:C.red}>{e.cited?'Cited':'Not Cited'}</Pill>
-                  <span style={{ fontSize:10, color:C.muted, marginLeft:'auto' }}>{e.checked}</span>
-                </div>
-                {e.snippet && <div style={{ fontSize:12, color:C.muted }}>"{e.snippet}"</div>}
-                {!e.cited && <div style={{ fontSize:12, color:'#f8717180' }}>Not appearing for tracked keywords. Add more snippets & FAQ schema.</div>}
+    if (tab === 'AI Citations') {
+      const [citationResults, setCitationResults] = useState(null)
+      const [crawling, setCrawling] = useState(false)
+      const [lastCrawled, setLastCrawled] = useState(null)
+
+      const runCrawl = async () => {
+        if (!keywords.length) { alert('Add keywords in Rank Tracker first.'); return }
+        setCrawling(true)
+        try {
+          const res = await fetch('https://ezltbarrkvlfijbkwwam.supabase.co/functions/v1/citation-crawler', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              businessName: profile.name,
+              keywords: keywords.map(k => k.keyword),
+              city: merchant.city,
+            })
+          })
+          const data = await res.json()
+          if (data.results) {
+            setCitationResults(data.results)
+            setLastCrawled(new Date().toLocaleTimeString())
+            db.set(`citations_${merchant.id}`, { results: data.results, crawledAt: new Date().toISOString() })
+          }
+        } catch(e) {
+          alert('Crawl failed: ' + e.message)
+        }
+        setCrawling(false)
+      }
+
+      // Load cached results
+      useState(() => {
+        const cached = db.get(`citations_${merchant.id}`)
+        if (cached) { setCitationResults(cached.results); setLastCrawled(new Date(cached.crawledAt).toLocaleTimeString()) }
+      })
+
+      const engines = citationResults
+        ? Object.values(citationResults)
+        : [{name:'Perplexity AI',icon:'🔮',cited:null,noApi:false},{name:'ChatGPT',icon:'🤖',cited:null,noApi:false},{name:'Google Gemini',icon:'✨',cited:null,noApi:false},{name:'Bing Copilot',icon:'🪟',cited:null,noApi:true},{name:'Meta AI',icon:'📘',cited:null,noApi:true}]
+
+      const citedCount = citationResults ? Object.values(citationResults).filter((e:any) => e.cited && !e.noApi).length : 0
+      const totalEngines = 3 // engines with APIs
+
+      return (
+        <div>
+          <div style={{ color:C.muted, fontSize:13, marginBottom:20 }}>GEOrank queries AI engines with your tracked keywords and checks if your business appears in the responses.</div>
+
+          {/* Summary + run button */}
+          <Card style={{ marginBottom:16, display:'flex', alignItems:'center', gap:16 }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, color:C.text, fontSize:16, marginBottom:4 }}>
+                {citationResults ? `${citedCount} of ${totalEngines} engines citing you` : 'Run your first crawl'}
+              </div>
+              <div style={{ fontSize:12, color:C.muted }}>
+                {lastCrawled ? `Last checked at ${lastCrawled}` : 'Check if your business appears in AI search responses'}
               </div>
             </div>
-          ))}
-        </Card>
-      </div>
-    )
+            {citationResults && (
+              <div style={{ textAlign:'center' }}>
+                <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:32, color:citedCount>=2?C.green:citedCount>=1?C.yellow:C.red }}>{citedCount}/{totalEngines}</div>
+                <div style={{ fontSize:10, color:C.muted }}>engines</div>
+              </div>
+            )}
+            <Btn onClick={runCrawl} disabled={crawling} color={C.blue}>
+              {crawling ? 'Crawling AI engines…' : citationResults ? 'Run Again' : 'Run Citation Crawl ✦'}
+            </Btn>
+          </Card>
+
+          {/* Engine results */}
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {engines.map((e:any, i:number) => (
+              <div key={i} style={{ display:'flex', gap:12, padding:'14px 16px', background:'#060610', borderRadius:12, border:`1px solid ${e.cited===true?C.green+'33':e.cited===false&&!e.noApi?C.red+'22':C.border}` }}>
+                <span style={{ fontSize:22, flexShrink:0 }}>{e.icon}</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, flexWrap:'wrap' }}>
+                    <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:13, color:C.text }}>{e.name}</span>
+                    {e.noApi
+                      ? <Pill color={C.muted}>No Public API</Pill>
+                      : e.cited === null
+                      ? <Pill color={C.muted}>Not checked yet</Pill>
+                      : <Pill color={e.cited?C.green:C.red}>{e.cited?'Cited':'Not Cited'}</Pill>
+                    }
+                    {e.checkedAt && <span style={{ fontSize:10, color:C.muted, marginLeft:'auto' }}>{new Date(e.checkedAt).toLocaleTimeString()}</span>}
+                  </div>
+                  {e.noApi && <div style={{ fontSize:12, color:C.muted }}>This engine does not offer a public API for citation monitoring.</div>}
+                  {!e.noApi && e.cited === true && e.results && (
+                    <div style={{ fontSize:12, color:C.muted }}>
+                      Cited in {e.citedCount} of {e.totalChecked} keyword searches.
+                      {e.results.find((r:any)=>r.cited)?.snippet && <span> "{e.results.find((r:any)=>r.cited).snippet}"</span>}
+                    </div>
+                  )}
+                  {!e.noApi && e.cited === false && e.cited !== null && (
+                    <div style={{ fontSize:12, color:'#f8717180' }}>Not appearing for your tracked keywords. Add more AI snippets & FAQ schema to improve coverage.</div>
+                  )}
+                  {!e.noApi && e.cited !== null && e.results && (
+                    <details style={{ marginTop:8 }}>
+                      <summary style={{ cursor:'pointer', fontSize:11, color:C.muted, fontWeight:700 }}>View keyword breakdown</summary>
+                      <div style={{ marginTop:8 }}>
+                        {e.results.map((r:any, j:number) => (
+                          <div key={j} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', borderBottom:`1px solid ${C.border}`, fontSize:12 }}>
+                            <span style={{ color:r.cited?C.green:C.red }}>{r.cited?'✓':'✗'}</span>
+                            <span style={{ color:C.text, flex:1 }}>{r.keyword}</span>
+                            <Pill color={r.cited?C.green:C.red}>{r.cited?'Cited':'Not Cited'}</Pill>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
 
     if (tab === 'Reports') return (
       <div>
@@ -737,6 +858,142 @@ export default function MerchantApp() {
               <Btn small color={C.green} onClick={()=>window.open('https://georankhq.co/landing.html#contact')}>Book a Call</Btn>
             </div>
           </div>
+        </div>
+      )
+    }
+
+    if (tab === 'Competitor Tracker') {
+      const engines = ['perplexity', 'openai', 'gemini']
+      const engineNames = { perplexity: 'Perplexity', openai: 'ChatGPT', gemini: 'Gemini' }
+      const engineIcons = { perplexity: '🔮', openai: '🤖', gemini: '✨' }
+
+      const getCitedCount = (results) => {
+        if (!results) return 0
+        return engines.filter(e => results[e]?.cited && !results[e]?.noApi).length
+      }
+
+      const businesses = compResults ? Object.keys(compResults) : []
+
+      return (
+        <div>
+          <div style={{ color:C.muted, fontSize:13, marginBottom:20 }}>See how your AI search visibility compares to your competitors across ChatGPT, Perplexity and Gemini.</div>
+
+          {/* Competitor inputs */}
+          <Card style={{ marginBottom:16 }}>
+            <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, color:C.text, marginBottom:16 }}>Your Competitors</div>
+            {competitors.map((comp, i) => (
+              <div key={i} style={{ display:'flex', gap:10, marginBottom:10 }}>
+                <input
+                  value={comp}
+                  onChange={e => {
+                    const updated = [...competitors]
+                    updated[i] = e.target.value
+                    setCompetitors(updated)
+                    db.set('competitors', updated)
+                  }}
+                  placeholder={`Competitor ${i+1} business name`}
+                  style={{ flex:1, background:'#060610', border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontSize:13, fontFamily:'inherit', outline:'none' }}
+                />
+                {competitors.length > 1 && (
+                  <Btn small outline color={C.red} onClick={() => {
+                    const updated = competitors.filter((_,j) => j !== i)
+                    setCompetitors(updated)
+                    db.set('competitors', updated)
+                  }}>✕</Btn>
+                )}
+              </div>
+            ))}
+            <div style={{ display:'flex', gap:10, marginTop:6 }}>
+              {competitors.length < 4 && (
+                <Btn small outline color={C.blue} onClick={() => setCompetitors([...competitors, ''])}>+ Add Competitor</Btn>
+              )}
+              <Btn small color={C.blue} onClick={runCompetitorCrawl} disabled={compCrawling}>
+                {compCrawling ? 'Crawling all businesses…' : 'Run Competitor Analysis ✦'}
+              </Btn>
+            </div>
+          </Card>
+
+          {/* Results */}
+          {compResults && businesses.length > 0 && (
+            <>
+              {/* Summary comparison */}
+              <Card style={{ marginBottom:16 }}>
+                <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, color:C.text, marginBottom:16 }}>AI Citation Comparison</div>
+                <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign:'left', padding:'8px 12px', fontSize:11, color:C.muted, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', borderBottom:`1px solid ${C.border}` }}>Business</th>
+                      {engines.map(e => (
+                        <th key={e} style={{ textAlign:'center', padding:'8px 12px', fontSize:11, color:C.muted, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', borderBottom:`1px solid ${C.border}` }}>{engineIcons[e]} {engineNames[e]}</th>
+                      ))}
+                      <th style={{ textAlign:'center', padding:'8px 12px', fontSize:11, color:C.muted, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', borderBottom:`1px solid ${C.border}` }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {businesses.map((biz, i) => {
+                      const results = compResults[biz]
+                      const isYou = results?.isYou
+                      const total = getCitedCount(results)
+                      return (
+                        <tr key={i} style={{ background: isYou ? `${C.blue}08` : 'transparent' }}>
+                          <td style={{ padding:'12px', borderBottom:`1px solid ${C.border}` }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                              {isYou && <span style={{ background:`${C.blue}22`, color:C.blue, fontSize:10, fontWeight:700, padding:'2px 6px', borderRadius:4 }}>YOU</span>}
+                              <span style={{ fontSize:13, fontWeight: isYou ? 700 : 400, color: isYou ? C.text : C.muted }}>{biz}</span>
+                            </div>
+                          </td>
+                          {engines.map(e => {
+                            const cited = results?.[e]?.cited
+                            return (
+                              <td key={e} style={{ textAlign:'center', padding:'12px', borderBottom:`1px solid ${C.border}` }}>
+                                <span style={{ fontSize:16 }}>{cited ? '✅' : '❌'}</span>
+                              </td>
+                            )
+                          })}
+                          <td style={{ textAlign:'center', padding:'12px', borderBottom:`1px solid ${C.border}` }}>
+                            <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:18, color: total >= 2 ? C.green : total === 1 ? C.yellow : C.red }}>{total}/3</span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </Card>
+
+              {/* Insight */}
+              {(() => {
+                const yourResults = compResults[profile.name]
+                const yourScore = getCitedCount(yourResults)
+                const compScores = businesses.filter(b => b !== profile.name).map(b => getCitedCount(compResults[b]))
+                const avgComp = compScores.length ? Math.round(compScores.reduce((a,b)=>a+b,0) / compScores.length) : 0
+                const leading = yourScore > avgComp
+                return (
+                  <Card style={{ background: leading ? '#0a1a0a' : '#1a0a0a', border:`1px solid ${leading ? '#1a3a1a' : '#3a1a1a'}` }}>
+                    <div style={{ fontSize:14, fontWeight:700, color: leading ? C.green : C.red, marginBottom:8 }}>
+                      {leading ? '🏆 You're ahead of your competitors!' : '⚠️ Your competitors have better AI visibility'}
+                    </div>
+                    <div style={{ fontSize:13, color:C.muted, lineHeight:1.7 }}>
+                      {leading
+                        ? `You appear in ${yourScore}/3 AI engines vs an average of ${avgComp}/3 for your competitors. Keep optimizing to maintain your lead.`
+                        : `You appear in ${yourScore}/3 AI engines vs an average of ${avgComp}/3 for your competitors. Use the Schema Builder and AI Snippets to close the gap.`
+                      }
+                    </div>
+                    {!leading && (
+                      <div style={{ marginTop:12 }}>
+                        <Btn small color={C.yellow} onClick={()=>setTab('Schema Builder')}>Fix with Schema Builder →</Btn>
+                      </div>
+                    )}
+                  </Card>
+                )
+              })()}
+            </>
+          )}
+
+          {!compResults && (
+            <div style={{ textAlign:'center', padding:'40px 20px', color:C.muted, fontSize:14 }}>
+              Add your competitors above and click "Run Competitor Analysis" to see how you compare.
+            </div>
+          )}
         </div>
       )
     }
